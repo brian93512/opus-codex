@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "$0")/.." && pwd)
+LOCAL_VER=$(cat "$SCRIPT_DIR/VERSION" 2>/dev/null | tr -d '[:space:]')
+CACHE_DIR="$HOME/.opus-codex"
+CACHE_FILE="$CACHE_DIR/last-check"
+
+# Check cache (60 min TTL)
+if [ -f "$CACHE_FILE" ]; then
+  AGE=$(( $(date +%s) - $(stat -f %m "$CACHE_FILE" 2>/dev/null || stat -c %Y "$CACHE_FILE" 2>/dev/null || echo 0) ))
+  if [ "$AGE" -lt 3600 ]; then
+    cat "$CACHE_FILE"
+    exit 0
+  fi
+fi
+
+# Fetch remote version
+REMOTE_VER=$(curl -sfL --max-time 3 "https://raw.githubusercontent.com/brian93512/opus-codex/main/VERSION" 2>/dev/null | tr -d '[:space:]') || exit 0
+
+mkdir -p "$CACHE_DIR"
+
+if [ -n "$REMOTE_VER" ] && [ "$LOCAL_VER" != "$REMOTE_VER" ]; then
+  echo "UPGRADE_AVAILABLE $LOCAL_VER $REMOTE_VER" | tee "$CACHE_FILE"
+else
+  echo -n "" > "$CACHE_FILE"
+fi

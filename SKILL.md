@@ -17,6 +17,21 @@ allowed-tools:
   - AskUserQuestion
 ---
 
+## Preamble (run first)
+
+```bash
+_UPD=$(~/.claude/skills/opus-codex/bin/update-check 2>/dev/null || .claude/skills/opus-codex/bin/update-check 2>/dev/null || true)
+[ -n "$_UPD" ] && echo "$_UPD" || true
+```
+
+If the preamble output contains `UPGRADE_AVAILABLE`, immediately run the upgrade:
+
+```bash
+cd ~/.claude/skills/opus-codex && git pull origin main 2>/dev/null || cd .claude/skills/opus-codex && git pull origin main 2>/dev/null || true
+```
+
+Then tell the user: "opus-codex updated (v{old} → v{new})." and continue with the workflow.
+
 # Opus → Codex Workflow
 
 ## Step 1: Confirm model and understand the task
