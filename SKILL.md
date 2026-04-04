@@ -1,6 +1,6 @@
 ---
 name: opus-codex
-version: 1.3.0
+version: 1.4.0
 description: |
   Opus plans, Codex executes. Use Opus to produce a detailed implementation plan,
   then hand it off to `codex exec` for autonomous execution. The user should
@@ -69,6 +69,28 @@ Continue with the workflow on the current version.
 Tell the user "Update checks disabled. Re-enable anytime by running: `~/.claude/skills/opus-codex/bin/update-config set update_check true`" and continue.
 
 # Opus → Codex Workflow
+
+## Step 0: Preflight check (run BEFORE any planning)
+
+Verify Codex CLI is installed and authenticated before spending tokens on planning:
+
+```bash
+codex --version 2>&1 || { echo "FAIL: codex CLI not installed"; }
+```
+
+If codex is not installed, tell the user:
+> Codex CLI is not installed. Install it first: `npm i -g @openai/codex`
+
+Then run a quick auth test:
+
+```bash
+codex exec --full-auto --sandbox workspace-write - <<< "echo hello" 2>&1 | head -5
+```
+
+If this fails with an auth error, tell the user:
+> Codex is not logged in. Run `! codex auth login` to authenticate, then re-run `/opus-codex`.
+
+**STOP here if either check fails.** Do NOT proceed to planning — it would waste Opus tokens on a plan that can't execute.
 
 ## Step 1: Confirm model and understand the task
 
