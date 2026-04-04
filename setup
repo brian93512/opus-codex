@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "opus-codex setup"
+echo "================"
+echo ""
+
+# Check codex CLI
+if ! command -v codex &>/dev/null; then
+  echo "WARNING: OpenAI Codex CLI not found."
+  echo "Install it:  npm i -g @openai/codex"
+  echo ""
+fi
+
+# Detect install scope
+INSTALL_DIR=$(cd "$(dirname "$0")" && pwd)
+if [[ "$INSTALL_DIR" == "$HOME/.claude/skills/"* ]]; then
+  echo "Installed globally (all projects): $INSTALL_DIR"
+elif [[ "$INSTALL_DIR" == *".claude/skills/"* ]]; then
+  echo "Installed at project scope: $INSTALL_DIR"
+else
+  echo "NOTE: This skill should live under ~/.claude/skills/opus-codex/ (global)"
+  echo "  or .claude/skills/opus-codex/ (project-level) for Claude Code to discover it."
+fi
+
+echo ""
+echo "Setup complete! Usage:"
+echo "  1. Start Claude Code"
+echo "  2. Switch to Opus: /model opus"
+echo "  3. Run: /opus-codex"
+echo "  4. Describe your task — Opus plans, Codex executes"
