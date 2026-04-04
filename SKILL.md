@@ -1,6 +1,6 @@
 ---
 name: opus-codex
-version: 1.2.0
+version: 1.3.0
 description: |
   Opus plans, Codex executes. Use Opus to produce a detailed implementation plan,
   then hand it off to `codex exec` for autonomous execution. The user should
@@ -24,13 +24,49 @@ _UPD=$(~/.claude/skills/opus-codex/bin/update-check 2>/dev/null || .claude/skill
 [ -n "$_UPD" ] && echo "$_UPD" || true
 ```
 
-If the preamble output contains `UPGRADE_AVAILABLE`, immediately run the upgrade:
+### If output contains `AUTO_UPGRADE`
+
+The user has opted into auto-upgrade. Immediately run:
 
 ```bash
 cd ~/.claude/skills/opus-codex && git pull origin main 2>/dev/null || cd .claude/skills/opus-codex && git pull origin main 2>/dev/null || true
 ```
 
-Then tell the user: "opus-codex updated (v{old} → v{new})." and continue with the workflow.
+Tell the user: "opus-codex auto-updated (v{old} → v{new})." and continue with the workflow.
+
+### If output contains `UPGRADE_AVAILABLE`
+
+Use AskUserQuestion to ask:
+> opus-codex update available (v{old} → v{new}). How would you like to proceed?
+> - A) Yes, upgrade now
+> - B) Always keep me up to date (auto-upgrade from now on)
+> - C) Not now (snooze 24h)
+> - D) Never ask again
+
+**If A (upgrade now):**
+```bash
+cd ~/.claude/skills/opus-codex && git pull origin main 2>/dev/null || cd .claude/skills/opus-codex && git pull origin main 2>/dev/null || true
+```
+Tell the user "Updated!" and continue.
+
+**If B (auto-upgrade):**
+```bash
+~/.claude/skills/opus-codex/bin/update-config set auto_upgrade true 2>/dev/null || .claude/skills/opus-codex/bin/update-config set auto_upgrade true 2>/dev/null || true
+cd ~/.claude/skills/opus-codex && git pull origin main 2>/dev/null || cd .claude/skills/opus-codex && git pull origin main 2>/dev/null || true
+```
+Tell the user "Auto-upgrade enabled. Future updates will apply automatically." and continue.
+
+**If C (not now):**
+```bash
+~/.claude/skills/opus-codex/bin/update-config snooze 24 2>/dev/null || .claude/skills/opus-codex/bin/update-config snooze 24 2>/dev/null || true
+```
+Continue with the workflow on the current version.
+
+**If D (never ask again):**
+```bash
+~/.claude/skills/opus-codex/bin/update-config set update_check false 2>/dev/null || .claude/skills/opus-codex/bin/update-config set update_check false 2>/dev/null || true
+```
+Tell the user "Update checks disabled. Re-enable anytime by running: `~/.claude/skills/opus-codex/bin/update-config set update_check true`" and continue.
 
 # Opus → Codex Workflow
 

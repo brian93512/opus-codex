@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Usage: update-config set <key> <value>
+#        update-config snooze <hours>
+set -euo pipefail
+
+CACHE_DIR="$HOME/.opus-codex"
+CONFIG_FILE="$CACHE_DIR/config"
+SNOOZE_FILE="$CACHE_DIR/snooze"
+
+mkdir -p "$CACHE_DIR"
+
+case "${1:-}" in
+  set)
+    KEY="${2:-}"
+    VALUE="${3:-}"
+    if [ -z "$KEY" ] || [ -z "$VALUE" ]; then
+      echo "Usage: update-config set <key> <value>" >&2
+      exit 1
+    fi
+    # Update or append key=value
+    if [ -f "$CONFIG_FILE" ] && grep -q "^${KEY}=" "$CONFIG_FILE" 2>/dev/null; then
+      sed -i'' -e "s/^${KEY}=.*/${KEY}=${VALUE}/" "$CONFIG_FILE"
+    else
+      echo "${KEY}=${VALUE}" >> "$CONFIG_FILE"
+    fi
+    # Clear cache so next check is fresh
+    rm -f "$CACHE_DIR/last-check"
+    echo "Set ${KEY}=${VALUE}"
+    ;;
+  snooze)
+    HOURS="${2:-24}"
+    UNTIL=$(( $(date +%s) + HOURS * 3600 ))
+    echo "$UNTIL" > "$SNOOZE_FILE"
+    # Clear cache
+    rm -f "$CACHE_DIR/last-check"
+    echo "Snoozed for ${HOURS}h"
+    ;;
+  *)
+    echo "Usage: update-config set <key> <value> | update-config snooze <hours>" >&2
+    exit 1
+    ;;
+esac
