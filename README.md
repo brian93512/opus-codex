@@ -2,25 +2,21 @@
 
 Opus plans, Codex executes. A [Claude Code](https://claude.ai/code) skill that uses Claude Opus to produce detailed implementation plans, then hands them off to [OpenAI Codex CLI](https://github.com/openai/codex) for autonomous execution.
 
-## Prerequisites
+## Install — 30 seconds
 
-- [Claude Code](https://claude.ai/code)
-- [OpenAI Codex CLI](https://github.com/openai/codex) — `npm i -g @openai/codex`
-- Claude Opus model — `/model opus` in Claude Code
+**Requirements:** [Claude Code](https://claude.ai/code), [Git](https://git-scm.com), [OpenAI Codex CLI](https://github.com/openai/codex) (`npm i -g @openai/codex`)
 
-## Quickstart
+### Step 1: Install on your machine
 
-### Global install (all projects)
+Open Claude Code and paste this. Claude does the rest.
 
-```bash
-git clone https://github.com/brian93512/opus-codex.git ~/.claude/skills/opus-codex && cd ~/.claude/skills/opus-codex && ./setup
-```
+> Install opus-codex: run `git clone --single-branch --depth 1 https://github.com/brian93512/opus-codex.git ~/.claude/skills/opus-codex && cd ~/.claude/skills/opus-codex && ./setup` then add an "opus-codex" section to CLAUDE.md that lists the available skill: `/opus-codex`, and mentions it requires `/model opus`. Add a "Default workflow" section that says: for all implementation tasks, use `/opus-codex` (Opus plans, Codex executes).
 
-### Project install (single repo)
+### Step 2: Add to your repo so teammates get it (optional)
 
-```bash
-git clone https://github.com/brian93512/opus-codex.git .claude/skills/opus-codex && cd .claude/skills/opus-codex && ./setup
-```
+> Add opus-codex to this project: run `cp -Rf ~/.claude/skills/opus-codex .claude/skills/opus-codex && rm -rf .claude/skills/opus-codex/.git && cd .claude/skills/opus-codex && ./setup` then add an "opus-codex" section to this project's CLAUDE.md that lists the available skill: `/opus-codex`, and mentions it requires `/model opus`.
+
+Real files get committed to your repo (not a submodule), so `git clone` just works.
 
 ## Usage
 
@@ -31,15 +27,6 @@ git clone https://github.com/brian93512/opus-codex.git .claude/skills/opus-codex
 5. Review the plan, choose execution mode (full-auto or manual approvals)
 6. Codex executes the plan autonomously
 7. `/review` runs automatically on the result
-
-### Optional: make it the default workflow
-
-Add to your `CLAUDE.md` (global `~/.claude/CLAUDE.md` or project-level):
-
-```markdown
-## Default workflow
-For all implementation tasks, use `/opus-codex` (Opus plans, Codex executes).
-```
 
 ## How it works
 
