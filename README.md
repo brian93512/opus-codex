@@ -28,6 +28,37 @@ Real files get committed to your repo (not a submodule), so `git clone` just wor
 6. Codex executes the plan autonomously
 7. `/review` runs automatically on the result
 
+## See it work
+
+```
+You:    /model opus
+You:    /opus-codex
+You:    Add rate limiting middleware to our Express API
+
+Claude: [reads codebase — finds existing middleware patterns, route structure]
+        [produces detailed plan: 3 files, code snippets, edge cases, test cases]
+
+        Ready to hand off to Codex. How should it run?
+        A) Full-auto    B) Manual approvals    C) Edit plan    D) Cancel
+
+You:    A
+
+Claude: [hands plan to codex exec --full-auto --sandbox workspace-write]
+        ...
+        Codex executed successfully. Changes to 3 files (65 insertions):
+
+        src/middleware/rate-limit.ts   (new, 38 lines)
+        src/app.ts                    (3 lines added)
+        tests/rate-limit.test.ts      (new, 24 lines)
+
+        Running verification... all tests pass.
+
+        [auto-runs /review]
+        Review: PASS — no issues found. Ready to commit.
+```
+
+Opus thinks. Codex types. You ship.
+
 ## How it works
 
 1. **Opus plans** — reads your codebase, produces a detailed implementation plan with file paths, code snippets, edge cases, and verification steps
