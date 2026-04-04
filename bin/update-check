@@ -16,7 +16,7 @@ if [ -f "$CACHE_FILE" ]; then
 fi
 
 # Fetch remote version
-REMOTE_VER=$(curl -sfL --max-time 3 "https://raw.githubusercontent.com/brian93512/opus-codex/main/VERSION" 2>/dev/null | tr -d '[:space:]') || exit 0
+REMOTE_VER=$(curl -sfL --max-time 3 "https://raw.githubusercontent.com/brian93512/opus-codex/refs/heads/main/VERSION" 2>/dev/null | tr -d '[:space:]') || exit 0
 
 mkdir -p "$CACHE_DIR"
 
