@@ -1,6 +1,6 @@
 ---
 name: opus-codex
-version: 1.1.0
+version: 1.2.0
 description: |
   Opus plans, Codex executes. Use Opus to produce a detailed implementation plan,
   then hand it off to `codex exec` for autonomous execution. The user should
