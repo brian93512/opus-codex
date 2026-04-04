@@ -109,18 +109,31 @@ Note: pipe the plan via stdin (`-` flag) to avoid shell argument length limits.
 rm -f "$PLAN_FILE"
 ```
 
-## Step 7: Report results and review
+## Step 7: Bail-out check
 
-After codex completes:
+After codex completes, check whether it actually produced useful changes:
 
 ```bash
 git diff --stat
 ```
 
+**Bail out if ANY of these are true:**
+- Codex exit code was non-zero
+- `git diff --stat` shows no changes
+- Codex output contains repeated error messages or signs of looping
+
+If bailing out, tell the user:
+> Codex execution failed. Want me to implement this directly with Opus instead?
+
+Clean up the plan file and stop. Do NOT attempt to fix Codex's mistakes — that wastes more tokens than just doing it with Opus from the start.
+
+## Step 8: Report results and review
+
+If Codex succeeded (changes exist and no errors):
+
 Show the user:
 - Files changed by Codex
-- Whether the verification commands from the plan pass
-- Any errors from the codex output
+- Any warnings from the codex output
 
 Run the verification commands from the plan to confirm correctness.
 
