@@ -13,13 +13,13 @@ Opus plans, Codex executes. A [Claude Code](https://claude.ai/code) skill that u
 ### Global install (all projects)
 
 ```bash
-git clone https://github.com/AgentSafe-AI/opus-codex.git ~/.claude/skills/opus-codex && cd ~/.claude/skills/opus-codex && ./setup
+git clone https://github.com/brian93512/opus-codex.git ~/.claude/skills/opus-codex && cd ~/.claude/skills/opus-codex && ./setup
 ```
 
 ### Project install (single repo)
 
 ```bash
-git clone https://github.com/AgentSafe-AI/opus-codex.git .claude/skills/opus-codex && cd .claude/skills/opus-codex && ./setup
+git clone https://github.com/brian93512/opus-codex.git .claude/skills/opus-codex && cd .claude/skills/opus-codex && ./setup
 ```
 
 ## Usage
