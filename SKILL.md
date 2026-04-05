@@ -106,7 +106,11 @@ mkdir -p ~/.opus-codex && touch ~/.opus-codex/auth-verified
 ```
 
 If it fails with an auth error, tell the user:
-> Codex is not logged in. Run `! codex auth login` to authenticate, then re-run `/opus-codex`.
+> Codex is not authenticated. Either:
+> - Run `! codex auth login` to log in interactively, or
+> - Set your API key: `! export OPENAI_API_KEY=sk-...`
+>
+> Then re-run `/opus-codex`.
 
 **STOP here if either check fails.** Do NOT proceed to planning — it would waste Opus tokens on a plan that can't execute.
 

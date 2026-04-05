@@ -6,6 +6,8 @@ Opus plans, Codex executes. A [Claude Code](https://claude.ai/code) skill that u
 
 **Requirements:** [Claude Code](https://claude.ai/code), [Git](https://git-scm.com), [OpenAI Codex CLI](https://github.com/openai/codex) (`npm i -g @openai/codex`)
 
+**Codex auth:** Either `codex auth login` (interactive) or set `OPENAI_API_KEY` env var.
+
 ### Step 1: Install on your machine
 
 Open Claude Code and paste this. Claude does the rest.
