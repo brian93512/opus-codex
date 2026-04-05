@@ -1,6 +1,6 @@
 ---
 name: opus-codex
-version: 1.4.1
+version: 1.4.2
 description: |
   Opus plans, Codex executes. Use Opus to produce a detailed implementation plan,
   then hand it off to `codex exec` for autonomous execution. The user should
@@ -75,19 +75,37 @@ Tell the user "Update checks disabled. Re-enable anytime by running: `~/.claude/
 Verify Codex CLI is installed and authenticated before spending tokens on planning:
 
 ```bash
-codex --version 2>&1 || { echo "FAIL: codex CLI not installed"; }
+codex --version 2>&1 || echo "FAIL: codex CLI not installed"
+AUTH_MARKER="$HOME/.opus-codex/auth-verified"
+if [ -f "$AUTH_MARKER" ]; then
+  AGE=$(( $(date +%s) - $(stat -f %m "$AUTH_MARKER" 2>/dev/null || stat -c %Y "$AUTH_MARKER" 2>/dev/null || echo 0) ))
+  if [ "$AGE" -lt 604800 ]; then
+    echo "AUTH: cached (valid)"
+  else
+    echo "AUTH: expired"
+  fi
+else
+  echo "AUTH: not verified"
+fi
 ```
 
-If codex is not installed, tell the user:
+If codex is not installed (output contains "FAIL"), tell the user:
 > Codex CLI is not installed. Install it first: `npm i -g @openai/codex`
 
-Then run a quick auth test:
+If AUTH is "cached (valid)", skip auth test and proceed to Step 1.
+
+If AUTH is "expired" or "not verified", run a quick auth test:
 
 ```bash
 codex exec --full-auto --sandbox workspace-write - <<< "echo hello" 2>&1 | head -5
 ```
 
-If this fails with an auth error, tell the user:
+If the auth test succeeds, write the marker:
+```bash
+mkdir -p ~/.opus-codex && touch ~/.opus-codex/auth-verified
+```
+
+If it fails with an auth error, tell the user:
 > Codex is not logged in. Run `! codex auth login` to authenticate, then re-run `/opus-codex`.
 
 **STOP here if either check fails.** Do NOT proceed to planning — it would waste Opus tokens on a plan that can't execute.
