@@ -1,6 +1,6 @@
 ---
 name: opus-codex
-version: 1.4.3
+version: 1.4.4
 description: |
   Opus plans, Codex executes. Use Opus to produce a detailed implementation plan,
   then hand it off to `codex exec` for autonomous execution. The user should
@@ -211,7 +211,7 @@ Show the user:
 - Files changed by Codex
 - Any warnings from the codex output
 
-**Do NOT re-run tests or verification commands if Codex already ran them successfully during execution.** Trust Codex's test results to avoid wasting Claude tokens on duplicate work. Only re-run tests if Codex's output shows failures or if you cannot determine whether tests passed.
+**CRITICAL: NEVER re-run tests, pytest, npm test, or any verification commands.** Codex already ran them. Running them again wastes Claude tokens for zero benefit. This is the single biggest source of wasted cost in this workflow. If Codex's output shows all tests passed, report "Tests: passed (verified by Codex)" and move on. The ONLY exception is if Codex's output explicitly shows test failures.
 
 Then review the diff yourself — read `git diff` output carefully and check for:
 - Correctness: does the code match the plan's intent?
