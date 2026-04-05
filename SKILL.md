@@ -1,6 +1,6 @@
 ---
 name: opus-codex
-version: 1.5.0
+version: 1.5.1
 description: |
   Opus plans, Codex executes. Use Opus to produce a detailed implementation plan,
   then hand it off to `codex exec` for autonomous execution. The user should
@@ -148,7 +148,8 @@ Keep plans lean. Codex input tokens cost money too. A 200-line intent-based plan
 Write the plan using a heredoc:
 
 ```bash
-PLAN_FILE=$(mktemp /tmp/opus-plan-XXXXXX.md)
+PLAN_FILE=$(mktemp /tmp/opus-plan-XXXXXX)
+mv "$PLAN_FILE" "${PLAN_FILE}.md"; PLAN_FILE="${PLAN_FILE}.md"
 cat > "$PLAN_FILE" << 'PLAN_EOF'
 ... plan content here ...
 PLAN_EOF
@@ -167,14 +168,18 @@ Display the full plan to the user, then use AskUserQuestion:
 
 ## Step 6: Execute with Codex
 
+```bash
+CODEX_LOG=$(mktemp /tmp/codex-log-XXXXXX.txt)
+```
+
 **If A (full-auto):**
 ```bash
-codex exec --full-auto --sandbox workspace-write - < "$PLAN_FILE" 2>&1
+codex exec --full-auto --sandbox workspace-write - < "$PLAN_FILE" > "$CODEX_LOG" 2>&1
 ```
 
 **If B (manual approvals):**
 ```bash
-codex exec --sandbox workspace-write - < "$PLAN_FILE" 2>&1
+codex exec --sandbox workspace-write - < "$PLAN_FILE" > "$CODEX_LOG" 2>&1
 ```
 
 Note: pipe the plan via stdin (`-` flag) to avoid shell argument length limits.
@@ -241,7 +246,7 @@ Review this diff output directly. This IS the review. Check for:
 # Remove common Codex sandbox artifacts
 rm -f sitecustomize.py 2>/dev/null
 rm -rf __pycache__ .codex 2>/dev/null
-rm -f "$PLAN_FILE"
+rm -f "$PLAN_FILE" "$CODEX_LOG"
 ```
 
 ### 8d. Report to the user
