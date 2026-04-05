@@ -1,6 +1,6 @@
 ---
 name: opus-codex
-version: 1.4.0
+version: 1.4.1
 description: |
   Opus plans, Codex executes. Use Opus to produce a detailed implementation plan,
   then hand it off to `codex exec` for autonomous execution. The user should
@@ -195,4 +195,10 @@ Show the user:
 
 Run the verification commands from the plan to confirm correctness.
 
-Then automatically invoke `/review` to review the diff. Do NOT ask the user whether to review — always review by default.
+Then review the diff yourself — read `git diff` output carefully and check for:
+- Correctness: does the code match the plan's intent?
+- Missing imports or dependencies
+- Obvious bugs or typos
+- Files that were supposed to change but didn't
+
+Report your review findings to the user. Do NOT invoke `/review` or any external skill — this skill must work standalone without gstack or other skill frameworks.
