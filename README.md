@@ -8,17 +8,23 @@ Opus plans, Codex executes. A [Claude Code](https://claude.ai/code) skill that u
 
 **Codex auth:** Either `codex auth login` (interactive) or set `OPENAI_API_KEY` env var.
 
-### Step 1: Install on your machine
+### Option A: Install globally (all projects)
 
 Open Claude Code and paste this. Claude does the rest.
 
 > Install opus-codex: run `git clone --single-branch --depth 1 https://github.com/brian93512/opus-codex.git ~/.claude/skills/opus-codex && cd ~/.claude/skills/opus-codex && ./setup` then add an "opus-codex" section to CLAUDE.md that lists the available skill: `/opus-codex`, and mentions it requires `/model opus`. Add a "Default workflow" section that says: for all implementation tasks, use `/opus-codex` (Opus plans, Codex executes).
 
-### Step 2: Add to your repo so teammates get it (optional)
+### Option B: Install in a single project
+
+> Install opus-codex for this project only: run `git clone --single-branch --depth 1 https://github.com/brian93512/opus-codex.git .claude/skills/opus-codex && rm -rf .claude/skills/opus-codex/.git && cd .claude/skills/opus-codex && ./setup` then add an "opus-codex" section to this project's CLAUDE.md that lists the available skill: `/opus-codex`, and mentions it requires `/model opus`.
+
+Real files get committed to your repo (not a submodule), so teammates get it automatically on `git clone`.
+
+### Option C: Both (global + share with teammates)
+
+Install globally first (Option A), then copy into your project:
 
 > Add opus-codex to this project: run `cp -Rf ~/.claude/skills/opus-codex .claude/skills/opus-codex && rm -rf .claude/skills/opus-codex/.git && cd .claude/skills/opus-codex && ./setup` then add an "opus-codex" section to this project's CLAUDE.md that lists the available skill: `/opus-codex`, and mentions it requires `/model opus`.
-
-Real files get committed to your repo (not a submodule), so `git clone` just works.
 
 ## Usage
 
