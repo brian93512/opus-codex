@@ -203,7 +203,8 @@ Run this single command block to get everything you need in ONE turn:
 ```bash
 echo "=== CODEX SUMMARY ==="
 echo "--- Errors ---"
-grep -i -n 'error\|fail\|traceback\|exception\|abort' "$CODEX_LOG" 2>/dev/null || echo "(none)"
+ERRORS=$(grep -i -n 'error\|fail\|traceback\|exception\|abort' "$CODEX_LOG" 2>/dev/null)
+if [ -n "$ERRORS" ]; then echo "$ERRORS"; echo "HAS_ERRORS=true"; else echo "(none)"; echo "HAS_ERRORS=false"; fi
 echo "--- Test results ---"
 grep -i -n 'passed\|failed\| ok\|PASSED\|FAILED\|tests\? ran\|test.*complete' "$CODEX_LOG" 2>/dev/null || echo "(none found)"
 echo "--- Last 15 lines ---"
@@ -214,29 +215,43 @@ git diff --stat
 echo ""
 echo "=== GIT DIFF ==="
 git diff
-echo ""
-echo "=== CLEANUP ==="
+```
+
+This extracts the important signals from Codex output (errors, test results, final status) without dumping 500+ lines into the conversation context.
+
+### If `HAS_ERRORS=true` or something looks unexpected:
+
+Read the full Codex log for diagnosis:
+
+```bash
+cat "$CODEX_LOG"
+```
+
+This is the ONLY time you should read the full log. Use it to understand what went wrong, then decide whether to bail out or if the errors are benign (e.g., warnings that don't affect the result).
+
+### If everything looks clean (`HAS_ERRORS=false`, tests passed, diff looks correct):
+
+Do NOT read the full log. Clean up and report:
+
+```bash
 rm -f sitecustomize.py 2>/dev/null
 rm -rf __pycache__ .codex 2>/dev/null
 rm -f "$PLAN_FILE" "$CODEX_LOG"
-echo "Done"
 ```
 
-This extracts the important signals from Codex output (errors, test results, final status) without dumping 500+ lines into the conversation context. The grep lines are small and targeted.
-
-**NEVER run additional commands after this.** No `git status`, no `git log`, no reading individual files. This one command is all you need.
+**NEVER run additional commands beyond what's described above.** No `git status`, no `git log`, no reading individual files.
 
 ### Bail out if ANY of these are true:
 - Codex exit code was non-zero (from Step 6)
 - `git diff --stat` shows no changes
-- Codex tail shows repeated errors or looping
+- Full log shows repeated errors or looping (after reading it due to HAS_ERRORS)
 
 If bailing out, tell the user:
 > Codex execution failed. Want me to implement this directly with Opus instead?
 
-### If Codex succeeded, review the diff and report:
+### If Codex succeeded, report:
 
-1. **Test results** — scan the Codex tail for test result lines (e.g., "X passed", "OK"). Report: "Tests: X passed (verified by Codex)". **NEVER re-run tests.** Codex already ran them.
+1. **Test results** — from the grep output. Report: "Tests: X passed (verified by Codex)". **NEVER re-run tests.**
 2. **Diff review** — check the `git diff` output for correctness, missing imports, bugs, files that should have changed but didn't.
 3. **Report** — show files changed, test results, and review findings.
 
