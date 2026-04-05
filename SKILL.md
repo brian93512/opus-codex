@@ -1,6 +1,6 @@
 ---
 name: opus-codex
-version: 1.4.4
+version: 1.5.0
 description: |
   Opus plans, Codex executes. Use Opus to produce a detailed implementation plan,
   then hand it off to `codex exec` for autonomous execution. The user should
@@ -136,11 +136,12 @@ Think deeply about the task and produce a detailed implementation plan. The plan
 1. **Goal** — one sentence summary
 2. **Codebase context** — key files, patterns, and conventions Codex needs to follow
 3. **Files to create or modify** — explicit list with full paths
-4. **Implementation steps** — numbered, each step actionable and specific with code snippets where helpful
+4. **Implementation steps** — numbered, each step actionable and specific. Describe INTENT and structure, not full code. Codex is smart enough to write code from clear descriptions. Bad: "Create store.py with this exact code: [150 lines]". Good: "Create store.py: JobStore class, thread-safe with Lock, CRUD methods, supports filtering + pagination."
 5. **Edge cases** — anything to watch out for
 6. **Verification** — exact commands to run and expected output
+7. **Cleanup** — end every plan with: "Delete any files not listed above that were created during execution (e.g., sitecustomize.py, __pycache__, shim directories)."
 
-Be prescriptive. Codex will follow this literally. Reference real file paths and existing code patterns.
+Keep plans lean. Codex input tokens cost money too. A 200-line intent-based plan works as well as a 1000-line code-heavy plan.
 
 ## Step 4: Write the plan to a temp file
 
@@ -187,11 +188,13 @@ rm -f "$PLAN_FILE"
 
 ## Step 7: Bail-out check
 
-After codex completes, check whether it actually produced useful changes:
+After codex completes, run ONE command to check results:
 
 ```bash
-git diff --stat
+git diff --stat && echo "---CODEX_EXIT: $?---"
 ```
+
+Do NOT run `git status`, `git diff` (full), or any other git commands here. One `git diff --stat` is enough.
 
 **Bail out if ANY of these are true:**
 - Codex exit code was non-zero
@@ -207,16 +210,46 @@ Clean up the plan file and stop. Do NOT attempt to fix Codex's mistakes — that
 
 If Codex succeeded (changes exist and no errors):
 
-Show the user:
-- Files changed by Codex
-- Any warnings from the codex output
+### 8a. Parse Codex output for test results
 
-**CRITICAL: NEVER re-run tests, pytest, npm test, or any verification commands.** Codex already ran them. Running them again wastes Claude tokens for zero benefit. This is the single biggest source of wasted cost in this workflow. If Codex's output shows all tests passed, report "Tests: passed (verified by Codex)" and move on. The ONLY exception is if Codex's output explicitly shows test failures.
+Scan the Codex stdout/stderr for test result lines (e.g., "X passed", "OK", "All tests pass").
+If found, report: "Tests: X passed (verified by Codex)" and move on.
 
-Then review the diff yourself — read `git diff` output carefully and check for:
+**CRITICAL: NEVER re-run tests, pytest, npm test, or any verification commands.** Codex already ran them. Running them again wastes tokens for zero benefit. The ONLY exception is if Codex's output explicitly shows test failures or you cannot find any test result lines in the output.
+
+### 8b. Review the unified diff
+
+Run ONE command:
+
+```bash
+git diff
+```
+
+Review this diff output directly. This IS the review. Check for:
 - Correctness: does the code match the plan's intent?
 - Missing imports or dependencies
 - Obvious bugs or typos
 - Files that were supposed to change but didn't
 
-Report your review findings to the user. Do NOT invoke `/review` or any external skill — this skill must work standalone without gstack or other skill frameworks.
+**NEVER read individual files that Codex created or modified.** The diff already contains the full changes. Reading files individually explodes cache read tokens and is the biggest cost driver in this workflow. The diff is sufficient for review.
+
+**NEVER run `git status`, `git log`, or additional `git diff` variants.** You already have `git diff --stat` from Step 7 and `git diff` from here. That's all you need.
+
+### 8c. Clean up sandbox artifacts
+
+```bash
+# Remove common Codex sandbox artifacts
+rm -f sitecustomize.py 2>/dev/null
+rm -rf __pycache__ .codex 2>/dev/null
+rm -f "$PLAN_FILE"
+```
+
+### 8d. Report to the user
+
+Show:
+- Files changed (from Step 7's `git diff --stat`)
+- Test results (from 8a)
+- Review findings (from 8b)
+- Any warnings from Codex output
+
+Do NOT invoke `/review` or any external skill — this skill must work standalone without gstack or other skill frameworks.
