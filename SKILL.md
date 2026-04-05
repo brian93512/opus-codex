@@ -1,6 +1,6 @@
 ---
 name: opus-codex
-version: 1.6.0
+version: 1.5.0
 description: |
   Opus plans, Codex executes. Use Opus to produce a detailed implementation plan,
   then hand it off to `codex exec` for autonomous execution. The user should
@@ -106,11 +106,7 @@ mkdir -p ~/.opus-codex && touch ~/.opus-codex/auth-verified
 ```
 
 If it fails with an auth error, tell the user:
-> Codex is not authenticated. Either:
-> - Run `! codex auth login` to log in interactively, or
-> - Set your API key: `! export OPENAI_API_KEY=sk-...`
->
-> Then re-run `/opus-codex`.
+> Codex is not logged in. Run `! codex auth login` to authenticate, then re-run `/opus-codex`.
 
 **STOP here if either check fails.** Do NOT proceed to planning — it would waste Opus tokens on a plan that can't execute.
 
@@ -171,23 +167,17 @@ Display the full plan to the user, then use AskUserQuestion:
 
 ## Step 6: Execute with Codex
 
-**IMPORTANT: Pipe codex output to a file, NOT into the conversation.** Codex stdout can be 500+ lines. If it lands in the conversation, it gets re-sent as cache read on every subsequent turn, inflating cost by ~20k tokens per turn. Keep it out of context.
-
-```bash
-CODEX_LOG=$(mktemp /tmp/codex-log-XXXXXX.txt)
-```
-
 **If A (full-auto):**
 ```bash
-codex exec --full-auto --sandbox workspace-write - < "$PLAN_FILE" > "$CODEX_LOG" 2>&1
-echo "EXIT_CODE: $?"
+codex exec --full-auto --sandbox workspace-write - < "$PLAN_FILE" 2>&1
 ```
 
 **If B (manual approvals):**
 ```bash
-codex exec --sandbox workspace-write - < "$PLAN_FILE" > "$CODEX_LOG" 2>&1
-echo "EXIT_CODE: $?"
+codex exec --sandbox workspace-write - < "$PLAN_FILE" 2>&1
 ```
+
+Note: pipe the plan via stdin (`-` flag) to avoid shell argument length limits.
 
 **If C:** Let the user describe changes, update the plan file with Edit, then re-run Step 5.
 
@@ -196,63 +186,70 @@ echo "EXIT_CODE: $?"
 rm -f "$PLAN_FILE"
 ```
 
-## Step 7: Check results, review, and report (ONE combined step)
+## Step 7: Bail-out check
 
-Run this single command block to get everything you need in ONE turn:
-
-```bash
-echo "=== CODEX SUMMARY ==="
-echo "--- Errors ---"
-ERRORS=$(grep -i -n 'error\|fail\|traceback\|exception\|abort' "$CODEX_LOG" 2>/dev/null)
-if [ -n "$ERRORS" ]; then echo "$ERRORS"; echo "HAS_ERRORS=true"; else echo "(none)"; echo "HAS_ERRORS=false"; fi
-echo "--- Test results ---"
-grep -i -n 'passed\|failed\| ok\|PASSED\|FAILED\|tests\? ran\|test.*complete' "$CODEX_LOG" 2>/dev/null || echo "(none found)"
-echo "--- Last 15 lines ---"
-tail -15 "$CODEX_LOG"
-echo ""
-echo "=== GIT DIFF STAT ==="
-git diff --stat
-echo ""
-echo "=== GIT DIFF ==="
-git diff
-```
-
-This extracts the important signals from Codex output (errors, test results, final status) without dumping 500+ lines into the conversation context.
-
-### If `HAS_ERRORS=true` or something looks unexpected:
-
-Read the full Codex log for diagnosis:
+After codex completes, run ONE command to check results:
 
 ```bash
-cat "$CODEX_LOG"
+git diff --stat && echo "---CODEX_EXIT: $?---"
 ```
 
-This is the ONLY time you should read the full log. Use it to understand what went wrong, then decide whether to bail out or if the errors are benign (e.g., warnings that don't affect the result).
+Do NOT run `git status`, `git diff` (full), or any other git commands here. One `git diff --stat` is enough.
 
-### If everything looks clean (`HAS_ERRORS=false`, tests passed, diff looks correct):
-
-Do NOT read the full log. Clean up and report:
-
-```bash
-rm -f sitecustomize.py 2>/dev/null
-rm -rf __pycache__ .codex 2>/dev/null
-rm -f "$PLAN_FILE" "$CODEX_LOG"
-```
-
-**NEVER run additional commands beyond what's described above.** No `git status`, no `git log`, no reading individual files.
-
-### Bail out if ANY of these are true:
-- Codex exit code was non-zero (from Step 6)
+**Bail out if ANY of these are true:**
+- Codex exit code was non-zero
 - `git diff --stat` shows no changes
-- Full log shows repeated errors or looping (after reading it due to HAS_ERRORS)
+- Codex output contains repeated error messages or signs of looping
 
 If bailing out, tell the user:
 > Codex execution failed. Want me to implement this directly with Opus instead?
 
-### If Codex succeeded, report:
+Clean up the plan file and stop. Do NOT attempt to fix Codex's mistakes — that wastes more tokens than just doing it with Opus from the start.
 
-1. **Test results** — from the grep output. Report: "Tests: X passed (verified by Codex)". **NEVER re-run tests.**
-2. **Diff review** — check the `git diff` output for correctness, missing imports, bugs, files that should have changed but didn't.
-3. **Report** — show files changed, test results, and review findings.
+## Step 8: Report results and review
 
-Do NOT invoke `/review` or any external skill — this skill must work standalone.
+If Codex succeeded (changes exist and no errors):
+
+### 8a. Parse Codex output for test results
+
+Scan the Codex stdout/stderr for test result lines (e.g., "X passed", "OK", "All tests pass").
+If found, report: "Tests: X passed (verified by Codex)" and move on.
+
+**CRITICAL: NEVER re-run tests, pytest, npm test, or any verification commands.** Codex already ran them. Running them again wastes tokens for zero benefit. The ONLY exception is if Codex's output explicitly shows test failures or you cannot find any test result lines in the output.
+
+### 8b. Review the unified diff
+
+Run ONE command:
+
+```bash
+git diff
+```
+
+Review this diff output directly. This IS the review. Check for:
+- Correctness: does the code match the plan's intent?
+- Missing imports or dependencies
+- Obvious bugs or typos
+- Files that were supposed to change but didn't
+
+**NEVER read individual files that Codex created or modified.** The diff already contains the full changes. Reading files individually explodes cache read tokens and is the biggest cost driver in this workflow. The diff is sufficient for review.
+
+**NEVER run `git status`, `git log`, or additional `git diff` variants.** You already have `git diff --stat` from Step 7 and `git diff` from here. That's all you need.
+
+### 8c. Clean up sandbox artifacts
+
+```bash
+# Remove common Codex sandbox artifacts
+rm -f sitecustomize.py 2>/dev/null
+rm -rf __pycache__ .codex 2>/dev/null
+rm -f "$PLAN_FILE"
+```
+
+### 8d. Report to the user
+
+Show:
+- Files changed (from Step 7's `git diff --stat`)
+- Test results (from 8a)
+- Review findings (from 8b)
+- Any warnings from Codex output
+
+Do NOT invoke `/review` or any external skill — this skill must work standalone without gstack or other skill frameworks.
