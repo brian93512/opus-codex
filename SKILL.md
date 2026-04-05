@@ -1,6 +1,6 @@
 ---
 name: opus-codex
-version: 1.5.1
+version: 1.5.2
 description: |
   Opus plans, Codex executes. Use Opus to produce a detailed implementation plan,
   then hand it off to `codex exec` for autonomous execution. The user should
@@ -169,7 +169,7 @@ Display the full plan to the user, then use AskUserQuestion:
 ## Step 6: Execute with Codex
 
 ```bash
-CODEX_LOG=$(mktemp /tmp/codex-log-XXXXXX.txt)
+CODEX_LOG=$(mktemp /tmp/codex-log-XXXXXX)
 ```
 
 **If A (full-auto):**
@@ -215,12 +215,17 @@ Clean up the plan file and stop. Do NOT attempt to fix Codex's mistakes — that
 
 If Codex succeeded (changes exist and no errors):
 
-### 8a. Parse Codex output for test results
+### 8a. Extract test results from Codex log
 
-Scan the Codex stdout/stderr for test result lines (e.g., "X passed", "OK", "All tests pass").
-If found, report: "Tests: X passed (verified by Codex)" and move on.
+Use grep to extract test results from the log file. Do NOT read or cat the full log — it's 600+ lines and will bloat the conversation context, defeating the purpose of piping to a file.
 
-**CRITICAL: NEVER re-run tests, pytest, npm test, or any verification commands.** Codex already ran them. Running them again wastes tokens for zero benefit. The ONLY exception is if Codex's output explicitly shows test failures or you cannot find any test result lines in the output.
+```bash
+grep -i 'passed\|failed\|error\| ok\|tests\? ran\|test.*complete' "$CODEX_LOG" | tail -5
+```
+
+If grep finds test result lines, report: "Tests: X passed (verified by Codex)" and move on.
+
+**CRITICAL: NEVER re-run tests, pytest, npm test, or any verification commands.** Codex already ran them. **NEVER read the full log file** — grep is sufficient.
 
 ### 8b. Review the unified diff
 
