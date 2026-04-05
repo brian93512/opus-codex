@@ -1,6 +1,6 @@
 ---
 name: opus-codex
-version: 1.4.2
+version: 1.4.3
 description: |
   Opus plans, Codex executes. Use Opus to produce a detailed implementation plan,
   then hand it off to `codex exec` for autonomous execution. The user should
@@ -211,7 +211,7 @@ Show the user:
 - Files changed by Codex
 - Any warnings from the codex output
 
-Run the verification commands from the plan to confirm correctness.
+**Do NOT re-run tests or verification commands if Codex already ran them successfully during execution.** Trust Codex's test results to avoid wasting Claude tokens on duplicate work. Only re-run tests if Codex's output shows failures or if you cannot determine whether tests passed.
 
 Then review the diff yourself — read `git diff` output carefully and check for:
 - Correctness: does the code match the plan's intent?
