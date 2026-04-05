@@ -1,6 +1,6 @@
 ---
 name: opus-codex
-version: 1.5.2
+version: 1.5.3
 description: |
   Opus plans, Codex executes. Use Opus to produce a detailed implementation plan,
   then hand it off to `codex exec` for autonomous execution. The user should
@@ -196,10 +196,10 @@ rm -f "$PLAN_FILE"
 After codex completes, run ONE command to check results:
 
 ```bash
-git diff --stat && echo "---CODEX_EXIT: $?---"
+git diff --stat && echo "--- Untracked ---" && git ls-files --others --exclude-standard
 ```
 
-Do NOT run `git status`, `git diff` (full), or any other git commands here. One `git diff --stat` is enough.
+This shows both modified and new files Codex created. Do NOT run additional git commands.
 
 **Bail out if ANY of these are true:**
 - Codex exit code was non-zero
