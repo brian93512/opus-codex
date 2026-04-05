@@ -201,8 +201,13 @@ rm -f "$PLAN_FILE"
 Run this single command block to get everything you need in ONE turn:
 
 ```bash
-echo "=== CODEX TAIL (last 30 lines) ==="
-tail -30 "$CODEX_LOG"
+echo "=== CODEX SUMMARY ==="
+echo "--- Errors ---"
+grep -i -n 'error\|fail\|traceback\|exception\|abort' "$CODEX_LOG" 2>/dev/null || echo "(none)"
+echo "--- Test results ---"
+grep -i -n 'passed\|failed\| ok\|PASSED\|FAILED\|tests\? ran\|test.*complete' "$CODEX_LOG" 2>/dev/null || echo "(none found)"
+echo "--- Last 15 lines ---"
+tail -15 "$CODEX_LOG"
 echo ""
 echo "=== GIT DIFF STAT ==="
 git diff --stat
@@ -217,7 +222,7 @@ rm -f "$PLAN_FILE" "$CODEX_LOG"
 echo "Done"
 ```
 
-This gives you everything in a single turn: Codex's final output (test results, errors), file change summary, and full diff for review.
+This extracts the important signals from Codex output (errors, test results, final status) without dumping 500+ lines into the conversation context. The grep lines are small and targeted.
 
 **NEVER run additional commands after this.** No `git status`, no `git log`, no reading individual files. This one command is all you need.
 
