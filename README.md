@@ -67,7 +67,7 @@ Opus thinks. Codex types. You ship.
 | 500–800 LOC | Either approach |
 | > 800 LOC | opus-codex saves ~9%+ |
 
-Opus+Codex reduces output tokens by ~50% on large tasks by offloading code generation to Codex.
+Opus+Codex reduces output tokens by ~50% on large tasks by offloading code generation to Codex. See [benchmark details](BENCHMARK.md).
 
 ## How it works
 
