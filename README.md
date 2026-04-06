@@ -2,7 +2,7 @@
 
 Opus plans, Codex executes. A [Claude Code](https://claude.ai/code) skill that uses Claude Opus to produce detailed implementation plans, then hands them off to [OpenAI Codex CLI](https://github.com/openai/codex) for autonomous execution.
 
-## Install
+## Install — 15 seconds
 
 **Requirements:** [Claude Code](https://claude.ai/code), [Git](https://git-scm.com), [OpenAI Codex CLI](https://github.com/openai/codex) (`npm i -g @openai/codex`)
 
@@ -58,6 +58,16 @@ Claude: [hands plan to codex exec --full-auto --sandbox workspace-write]
 ```
 
 Opus thinks. Codex types. You ship.
+
+## When to use it
+
+| Task size | Recommendation |
+|-----------|---------------|
+| < 500 LOC | Pure Opus is cheaper |
+| 500–800 LOC | Either approach |
+| > 800 LOC | opus-codex saves ~9%+ |
+
+Opus+Codex reduces output tokens by ~50% on large tasks by offloading code generation to Codex.
 
 ## How it works
 
